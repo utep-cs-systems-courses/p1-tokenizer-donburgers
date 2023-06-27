@@ -1,57 +1,70 @@
-#include <stdio.h>
 #include <stdlib.h>
-#include <tokenizer.h>
+#include <string.h>
+#include "tokenizer.h"
 
 int space_char(char c){
-    // return 1 if c is a space or tab, otherwise 0
-    return (c == '\t' || c == ' ') ? 1 : 0;
+    return (c == ' ' || c == '\t');
 }
 
 int non_space_char(char c){
-    // return 1 if c is neither a space nor a tab, otherwise 0
-    return (c != '\t' && c != ' ') ? 1 : 0;
+    return (c != ' ' && c != '\t' && c != '\0');
 }
 
-
-char *word_start(char *str){
-    // Loop until we reach end of string
-    while (*str != '\0'){
-        // If the current character is not a space, return the current position
-        if (non_space_char(*str)){
-            return str;
-        }
-        // Move to the next character
+char *token_start(char *str){
+    while(space_char(*str) && *str != '\0')
         str++;
-    }
-    // If we've reached this point, all characters were spaces, so return a pointer to the null terminator
     return str;
 }
 
-char *copy_str(char *inStr, short len){
-    // Allocate memory for new string
-    char *strCopy = malloc((len+1) * sizeof(char));
-    // Check if malloc succeeded
-    if(strCopy == NULL) {
-        fprintf(stderr, "Failed to allocate memory in copy_str\n");
-        return NULL;
-    }
-    // Copy characters from inStr to strCopy
-    for (int i = 0; i < len; i++){
-        strCopy[i] = inStr[i];
-    }
-    // Add null terminator to the end of the new string
-    strCopy[len] = '\0';
-    // Return the new string
-    return strCopy;
+char *token_terminator(char *token){
+    while(non_space_char(*token) && *token != '\0')
+        token++;
+    return token;
 }
 
+int count_tokens(char *str){
+    int count = 0;
+    char *start = token_start(str);
+    while(*start != '\0'){
+        start = token_terminator(start);
+        start = token_start(start);
+        count++;
+    }
+    return count;
+}
+
+char *copy_str(char *inStr, short len){
+    char *outStr = malloc((len+1) * sizeof(char));
+    strncpy(outStr, inStr, len);
+    outStr[len] = '\0';
+    return outStr;
+}
+
+char **tokenize(char* str){
+    int token_count = count_tokens(str);
+    char **tokens = malloc((token_count + 1) * sizeof(char*));
+
+    char *start = str;
+    char *end;
+    for(int i = 0; i < token_count; i++){
+        start = token_start(start);
+        end = token_terminator(start);
+        tokens[i] = copy_str(start, end - start);
+        start = end;
+    }
+    tokens[token_count] = NULL;
+    return tokens;
+}
 
 void print_tokens(char **tokens){
-    // Loop until we encounter NULL (indicating the end of the tokens)
-    while (*tokens != NULL){
-        // Print the current token followed by a newline
-        printf("%s\n", *tokens);
-        // Move to the next token
-        tokens++;
+    for(int i = 0; tokens[i] != NULL; i++){
+        printf("%s\n", tokens[i]);
     }
+}
+
+void free_tokens(char **tokens){
+    for(int i = 0; tokens[i] != NULL; i++){
+        free(tokens[i]);
+    }
+    free(tokens);
 }
