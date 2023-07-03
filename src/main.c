@@ -12,6 +12,17 @@ int my_strlen(char *str) {
     return len;
 }
 
+void remove_newline(char* str) {
+    int i = 0;
+    while (str[i] != '\0') {
+        if (str[i] == '\n') {
+            str[i] = '\0';
+            return;
+        }
+        i++;
+    }
+}
+
 int main(){
     // Buffer for user input
     char input[MAX];
@@ -19,9 +30,6 @@ int main(){
     List *list = init_history();
     // Pointer to hold tokens
     char **tokens = NULL;
-
-
-
 
     printf("#######\n");    
     printf("   #     ####  #    # ###### #    # # ###### ###### ##### \n");
@@ -33,11 +41,16 @@ int main(){
     printf("\n");
     printf("Created by: Brian Mata");
     printf("\n");
-
-    // Main menu loop
+    
     // Main menu loop
     while(1){
-        // ... (display menu and get user input)
+        printf("Enter an option: ");
+        if(fgets(input, MAX, stdin) == NULL) {
+            puts("Error reading input.");
+            continue;
+        }
+        // remove newline character
+        remove_newline(input);
 
         // Tokenize input
         tokens = tokenize(input);
@@ -53,61 +66,49 @@ int main(){
             puts("Tokenizer");
             puts("Enter a string");
 
+            // Get user input
+            if(fgets(input, MAX, stdin) == NULL) {
+                puts("Error reading input.");
+                continue;
+            }
+            // remove newline character
+            remove_newline(input);
+
             // Tokenizer loop
             while(1){
-                // ... (get user input and tokenize it)
-
                 // Check for empty input
-                if(*(tokens[0]+1) == '\0'){
+                if(input[0] == '\0'){
                     puts("Empty String");
                     break;
                 }
                 else{
                     // Print tokens and add input to history
                     print_tokens(tokens);
-                    add_history(list, copy_str(input, my_strlen(input))); // minus 1 to remove the newline character
+                    add_history(list, copy_str(input, my_strlen(input)));
                 }
-                free_tokens(tokens);
             }
+            free_tokens(tokens);
+            tokens = NULL;
         }
         // Option 2: History
         else if(*tokens[0] == '2'){
-            // ... (display history menu)
-
-            // History loop
-            while(1){
-                // ... (get user input and tokenize it)
-
-                // Sub-option 1: View History
-                if(*tokens[0] == '1'){
-                    // ... (print history)
-                }
-                // Sub-option: Quit
-                else if(*tokens[0] == 'q'){
-                    // ... (quit to main menu)
-                }
-                // Sub-option: History by ID
-                else{
-                    // Get history item
-                    char *history_item = get_history(list, atoi(tokens[0]));
-                    // Check for error
-                    if (history_item != NULL) {
-                        printf("%s", history_item);
-                    } else {
-                        puts("History item not found.");
-                    }
-                }
-                free_tokens(tokens);
-            }
+            print_history(list);
         }
         // Option: Quit
         else if(*tokens[0] == 'q'){
-            // ... (free history and quit)
+            break;
         }
         // Invalid option
         else{
             puts("Invalid input");
         }
-        free_tokens(tokens);
+
+        if(tokens != NULL){
+            free_tokens(tokens);
+            tokens = NULL;
+        }
     }
+
+    free_history(list);
+    return 0;
 }
