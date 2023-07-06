@@ -2,27 +2,38 @@
 #include <stdlib.h>
 #include "tokenizer.h"
 #include "history.h"
-#define MAX 100
 
-int my_strlen(char *str) {
+#define MAX 100
+//a function called str_len that takes a string and returns a number
+short str_len(char *str);
+
+//a function called history_ui that needs a history list
+void history_ui(List *history);
+
+//function to compare two strings. It tells us if the two strings are the same or not
+int custom_strcmp(char *str1, char *str2) {
+    while (*str1 && (*str1 == *str2)) {
+        str1++;
+        str2++;
+    }
+    /// If it finds a place where the two strings are different, it tells us that the strings are not the same
+    return *(unsigned char*)str1 - *(unsigned char*)str2;
+}
+
+// function is used to find the position of a particular character in a string
+int custom_strcspn(char *str, char *reject) {
     int len = 0;
-    while (str[len] != '\0') {
+    while (*str) {
+        if (*str == *reject)
+            break;
+        str++;
         len++;
     }
     return len;
 }
 
-int main(){
-    // Buffer for user input
-    char input[MAX];
-    // Initialize history list
-    List *list = init_history();
-    // Pointer to hold tokens
-    char **tokens = NULL;
-
-
-
-
+int main()
+{
     printf("#######\n");    
     printf("   #     ####  #    # ###### #    # # ###### ###### ##### \n");
     printf("   #    #    # #   #  #      ##   # #     #  #      #    #\n");
@@ -33,81 +44,89 @@ int main(){
     printf("\n");
     printf("Created by: Brian Mata");
     printf("\n");
-
-    // Main menu loop
-    // Main menu loop
+    List *history = init_history(); //creating an empty history list
+    //a loop that keeps going forever unless we stop 
     while(1){
-        // ... (display menu and get user input)
-
-        // Tokenize input
-        tokens = tokenize(input);
-
-        // Check for tokenize error
-        if(tokens == NULL) {
-            puts("Tokenize failed.");
-            continue;
-        }
-
-        // Option 1: Tokenize
-        if(*tokens[0] == '1'){
-            puts("Tokenizer");
-            puts("Enter a string");
-
-            // Tokenizer loop
-            while(1){
-                // ... (get user input and tokenize it)
-
-                // Check for empty input
-                if(*(tokens[0]+1) == '\0'){
-                    puts("Empty String");
-                    break;
-                }
-                else{
-                    // Print tokens and add input to history
-                    print_tokens(tokens);
-                    add_history(list, copy_str(input, my_strlen(input))); // minus 1 to remove the newline character
-                }
-                free_tokens(tokens);
-            }
-        }
-        // Option 2: History
-        else if(*tokens[0] == '2'){
-            // ... (display history menu)
-
-            // History loop
-            while(1){
-                // ... (get user input and tokenize it)
-
-                // Sub-option 1: View History
-                if(*tokens[0] == '1'){
-                    // ... (print history)
-                }
-                // Sub-option: Quit
-                else if(*tokens[0] == 'q'){
-                    // ... (quit to main menu)
-                }
-                // Sub-option: History by ID
-                else{
-                    // Get history item
-                    char *history_item = get_history(list, atoi(tokens[0]));
-                    // Check for error
-                    if (history_item != NULL) {
-                        printf("%s", history_item);
-                    } else {
-                        puts("History item not found.");
-                    }
-                }
-                free_tokens(tokens);
-            }
-        }
-        // Option: Quit
-        else if(*tokens[0] == 'q'){
-            // ... (free history and quit)
-        }
-        // Invalid option
-        else{
-            puts("Invalid input");
-        }
-        free_tokens(tokens);
+    printf("Enter a string to tokenize\n");
+    printf("Or Enter 'h' to see history 'q' to quit\n");
+    printf("Input: ");
+    char buf[MAX];
+    if(fgets(buf, MAX, stdin) == NULL) {
+      printf("Error reading input\n");
+      continue;
     }
+
+
+    buf[custom_strcspn(buf, "\n")] = 0;
+    
+
+    if(custom_strcmp(buf, "q") == 0) {
+      free_history(history);
+      break;
+    }
+
+    else if(custom_strcmp(buf, "") == 0){
+      printf("No input given! Please try again.\n\n");
+      continue;
+    }
+
+    else if(custom_strcmp(buf, "h") == 0)
+      history_ui(history);
+
+    else{
+      char *s = copy_str(buf, str_len(buf));
+      add_history(history, s);
+      char **t = tokenize(buf); 
+      print_tokens(t);
+      printf("\n");
+      free_tokens(t);
+      printf("Successfully tokenized (=^・^=)!\n");
+    }
+  }
+  printf("Goodbye (^O^)／\n");
+  return 0;
+}
+//function gives us the length of a string, or the number of characters in it
+short str_len(char *str)
+{
+  char *p = str;
+  while(*p != '\0'){
+    p++;
+  }
+  return (p-str);
+}
+
+void history_ui(List *history)
+{
+  print_history(history);
+  printf("Enter number to tokenize?\n>");
+  char response[MAX];
+  if(fgets(response, MAX, stdin) == NULL) {
+    printf("Error reading input\n");
+    return;
+  }
+
+
+  response[custom_strcspn(response, "\n")] = 0;
+  
+
+  int id = atoi(response);
+  if(id != 0){
+    char *str = get_history(history, id);
+
+    if(str){ 
+      char **t = tokenize(str);
+      print_tokens(t);
+      printf("\n");
+      free_tokens(t);
+      return;
+    }
+    else{
+      printf("\nInvalid id (-.-'）");
+    }
+  }
+  else{
+    printf("\nInvalid input (-_-;)");
+    return;
+  }
 }
