@@ -1,72 +1,74 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "history.h"
+#include "tokenizer.h"
 
-// Initialize the linked list to keep the history.
-List* init_history() {
-    // Allocate space for the List struct and set the root to NULL
-    List* list = (List*)malloc(sizeof(List));
-    list->root = NULL;
-    return list;
+//This method initializes the linked list for history
+List *init_history()
+{
+  List *new_list = malloc(sizeof(List));
+  if (new_list == NULL) return NULL;  // check if malloc succeeded
+  new_list->root = NULL;
+  return new_list;
 }
 
-// Add a history item to the end of the list.
-void add_history(List *list, char *str) {
-    // Allocate space for the new item, set its string and next fields
-    Item* new_item = (Item*)malloc(sizeof(Item));
-    new_item->str = str;
-    new_item->next = NULL;
+//This method adds a new item to the linked list
+void add_history(List *list, char *str)
+{
+  if (list == NULL || str == NULL) return;  // check if list and string are valid
+  Item *new_item = malloc(sizeof(Item));
+  if (new_item == NULL) return;  // check if malloc succeeded
 
-    if(list->root == NULL) {
-        // If the list is empty, set the new item as the root
-        new_item->id = 1;
-        list->root = new_item;
-    } else {
-        // If the list is not empty, add the new item at the end
-        Item* temp = list->root;
-        while(temp->next != NULL) {
-            temp = temp->next;
-        }
-        new_item->id = temp->id + 1;
-        temp->next = new_item;
+  short len = str_len(str);
+  new_item->str = copy_str(str, len);
+  new_item->next = NULL;
+
+  if (list->root == NULL) {
+    new_item->id = 1;
+    list->root = new_item;
+  }
+  else {
+    Item *curr_item = list->root;
+    while(curr_item->next) {
+      curr_item = curr_item->next;
     }
+    new_item->id = curr_item->id + 1;
+    curr_item->next = new_item;  // adds new node to end of linked list 
+  }
 }
 
-// Retrieve the string stored in the node where Item->id == id.
-char *get_history(List *list, int id) {
-    Item* temp = list->root;
-    while(temp != NULL) {
-        // If the id of the current item matches the requested id, return its string
-        if(temp->id == id) {
-            return temp->str;
-        }
-        temp = temp->next;
-    }
-    // If no matching id was found, return NULL
-    return NULL;
+//This method returns the string stored in the requested node
+char *get_history(List *list, int id)
+{
+  if(list == NULL) return NULL;  // check if list is valid
+  Item *curr_item = list->root;
+  while(curr_item && (curr_item->id != id)){
+    curr_item = curr_item->next;
+  }
+  return (curr_item && (curr_item->id == id)) ? curr_item->str : NULL;
 }
 
-// Print the entire contents of the list.
-void print_history(List *list) {
-    Item* temp = list->root;
-    while(temp != NULL) {
-        printf("%d: %s\n", temp->id, temp->str);
-        temp = temp->next;
-    }
+//This method prints out the ids and strings of all elements in the linked list
+void print_history(List *list)
+{
+  if(list == NULL) return;  // check if list is valid
+  Item *curr_item = list->root;
+  while(curr_item){
+    printf("%d. %s\n", curr_item->id, curr_item->str);
+    curr_item = curr_item->next;
+  }
 }
 
-// Free the history list and the strings it references.
-void free_history(List *list) {
-    Item* current = list->root;
-    Item* next;
-
-    while(current != NULL) {
-        next = current->next;
-        // Free the string and the item itself
-        free(current->str);
-        free(current);
-        current = next;
-    }
-    // Finally, free the list struct
-    free(list);
+//This method frees the nodes and list from memory
+void free_history(List *list)
+{
+  if(list == NULL) return;  // check if list is valid
+  Item *current_item = list->root;
+  while(current_item){
+    Item *next_item = current_item->next;
+    free(current_item->str);  // free the string
+    free(current_item);  // free the item
+    current_item = next_item;
+  }
+  free(list);
 }
